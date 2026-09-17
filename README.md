@@ -14,6 +14,9 @@ implementation for 150 environment steps (6 600 CHIP-8 instructions) with identi
 streams, and every observation, register, program counter, reward, termination flag and score matched
 (see [Validation](#validation)).
 
+<p align="center"><img src="imgs/octorch_mosaic.gif" alt="20 CHIP-8 games running in Octorch" width="800"/><br>
+<em>20 of the games, random policy, rendered with Octorch (<code>create_mosaic_gif.py</code>)</em></p>
+
 ## Why a PyTorch port?
 
 Octax relies on `jax.jit` / `jax.vmap` / `lax.scan`. Octorch makes the batching *explicit*: every field of
@@ -273,7 +276,8 @@ octorch/
 ├── tests/                 # unit, consistency and cross-validation tests
 ├── train.py               # PPO / PQN training script
 ├── play.py                # interactive emulator with score-register detection (pygame)
-└── create_gifs.py         # random-policy GIFs for every game
+├── create_gifs.py         # random-policy GIFs for every game
+└── create_mosaic_gif.py   # the 20-game mosaic GIF above
 ```
 
 ## Adding a new game
