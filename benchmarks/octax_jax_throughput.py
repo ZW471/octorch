@@ -1,6 +1,6 @@
 """Throughput of the original JAX Octax: jit(vmap(env.step)) over B environments."""
 import sys, time, json
-sys.path.insert(0, "/tmp/octax")
+# run in an environment where `octax` is installed (e.g. `uv sync --extra validate`)
 import jax, jax.numpy as jnp
 from octax.environments import create_environment
 games = ["brix", "pong", "tetris", "blinky", "cavern1", "space_flight1"]

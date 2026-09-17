@@ -1,7 +1,7 @@
 """Dump reference traces from the original JAX octax, using an xorshift32 PRNG
 for CXNN stored in rng[0] so that traces are bit-comparable with octorch."""
 import sys, os, numpy as np, jax, jax.numpy as jnp
-sys.path.insert(0, "/tmp/octax")
+# run in an environment where `octax` is installed (e.g. `uv sync --extra validate`)
 import octax.emulator, octax.instructions.memory
 from octax.decode import DecodedInstruction
 
