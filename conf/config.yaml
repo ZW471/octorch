@@ -1,0 +1,12 @@
+env: blinky
+agent: PPO
+seed: 0
+num_seeds: 12
+
+num_envs: 512
+num_steps: 32
+num_epochs: 4
+num_minibatches: 32
+learning_rate: 5e-4
+total_timesteps: 5000000
+eval_freq: 131072

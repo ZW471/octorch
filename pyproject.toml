@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=64", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "octorch"
+version = "0.1.0"
+description = "Accelerated CHIP-8 Arcade RL Environments for PyTorch (a port of Octax)"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Zhiyu Wang"}
+]
+keywords = ["reinforcement-learning", "chip-8", "emulator", "pytorch", "torch"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.14.0",
+    "numpy>=1.24.0",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+gui = [
+    "pygame>=2.5.0",
+    "opencv-python>=4.8.0",
+    "pillow>=10.0.0",
+    "matplotlib>=3.8",
+]
+dev = [
+    "pytest>=7.0.0",
+    "pytest-cov>=4.0.0",
+]
+training = [
+    "pyyaml>=6.0",
+    "gymnasium>=1.0",
+]
+validate = [
+    "jax[cpu]~=0.6.1",
+    "flax~=0.10.6",
+    "octax~=0.1.1",
+    "opencv-python-headless>=4.8",
+    "pillow>=10.0.0",
+]
+all = ["octorch[gui,training,dev]"]
+
+[project.urls]
+Repository = "https://github.com/ZW471/octorch"
+
+[tool.setuptools.packages.find]
+include = ["octorch*"]
+
+[tool.setuptools.package-data]
+octorch = ["../roms/*.ch8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.uv]
+index-strategy = "unsafe-best-match"
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cu126" }
