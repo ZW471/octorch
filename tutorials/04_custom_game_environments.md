@@ -67,21 +67,24 @@ Without a display, the plain-Python `ScalarChip8` interpreter is convenient for 
 import octorch
 from octorch.interpreter import ScalarChip8
 
-state = octorch.load_rom(octorch.create_state(device="cpu"), "roms/Missile [David Winter].ch8")
+state = octorch.load_rom(octorch.create_state(device="cpu"), "roms/UFO [Lutz V, 1992].ch8")
 machine = ScalarChip8(state)
 
-seen_bcd = set()
-for i in range(20000):
+seen_bcd = {}
+for i in range(300000):
     instruction = machine.fetch()
-    if (instruction & 0xF0FF) == 0xF033:          # FX33: BCD of VX -> the displayed score
-        seen_bcd.add((instruction & 0x0F00) >> 8)
+    if (instruction & 0xF0FF) == 0xF033:          # FX33: BCD of VX -> a displayed number
+        register = (instruction & 0x0F00) >> 8
+        seen_bcd[register] = seen_bcd.get(register, 0) + 1
     machine.execute(instruction)
-    if i % 5000 == 4999:
-        machine.keypad[8] = not machine.keypad[8]  # toggle the fire key now and then
+    if i % 3000 == 2999:
+        machine.keypad[5] = not machine.keypad[5]  # toggle the "fire straight up" key now and then
 
-print(f"Registers converted to BCD (score candidates): {sorted(f'V{r:X}' for r in seen_bcd)}")
+print(f"Registers converted to BCD: { {f'V{r:X}': n for r, n in seen_bcd.items()} }")
 print(f"Register values: {machine.V.tolist()}")
 ```
+
+For UFO this reports `V7` (the score, drawn on the left) and `V8` (the remaining missiles, drawn on the right), which is exactly the pair used by `octorch/environments/ufo.py`.
 
 ## Stage 2 — Identify the Key Registers
 
@@ -246,6 +249,8 @@ Games that rely on the delay timer (Tetris, Blinky, ...) keep `disable_delay = F
 Cavern, Space Flight and Target Shooter ship multiple ROMs (one per level). `create_environment` handles the naming convention automatically:
 
 ```python
+from octorch.environments import create_environment
+
 # File naming: <env_id><level>.ch8  ->  env_id = "cavern", module = cavern.py
 env, _ = create_environment("cavern3")         # loads cavern3.ch8
 env, _ = create_environment("space_flight5")   # loads space_flight5.ch8
