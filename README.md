@@ -306,7 +306,22 @@ uv sync --extra validate && uv run pytest tests/test_octax_crossval.py   # cross
 
 ## Citation
 
-Octorch is a port; please cite the original work:
+If you use Octorch, please cite both this repository and the original Octax
+work it ports.
+
+Octorch (this repository):
+
+```bibtex
+@misc{wang2026octorch,
+    title={Octorch: A PyTorch Port of the Octax CHIP-8 Reinforcement Learning Environments},
+    author={Zhiyu Wang},
+    year={2026},
+    howpublished={\url{https://github.com/ZW471/octorch}},
+    note={GitHub repository}
+}
+```
+
+Octax (original work):
 
 ```bibtex
 @misc{radji2025octax,
