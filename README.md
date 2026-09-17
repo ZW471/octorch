@@ -159,6 +159,14 @@ start-up instructions at environment creation.
 
 <p align="center"><img src="imgs/figure_scaling.png" alt="Throughput scaling" width="700"/></p>
 
+## Training results
+
+PPO (`train.py`, 512 environments, 5M timesteps, 3 seeds, one A100 per game, compiled environment step;
+~10–25 min per seed including the network updates). Returns are evaluation episode returns of the
+stochastic policy over 512 episodes.
+
+<p align="center"><img src="imgs/figure_training.png" alt="PPO learning curves" width="900"/></p>
+
 ## Validation
 
 Two independent checks guard the emulator:
