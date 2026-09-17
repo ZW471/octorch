@@ -159,6 +159,25 @@ start-up instructions at environment creation.
 
 <p align="center"><img src="imgs/figure_scaling.png" alt="Throughput scaling" width="700"/></p>
 
+### Time cost: Octax (JAX) vs Octorch (PyTorch)
+
+Same A100-80GB, same six games (Brix, Pong, Tetris, Blinky, Cavern 1, Space Flight 1), same step
+(`frame_skip=4`, 44 CHIP-8 instructions). Octax runs `jax.jit(jax.vmap(env.step))` (JAX 0.6.2, CUDA 12.6);
+Octorch runs its compiled step (`torch.compile` + CUDA graph, frame granularity). Values are means over the six games.
+
+<p align="center"><img src="imgs/figure_octax_vs_octorch.png" alt="Octax vs Octorch time cost" width="900"/></p>
+
+| envs | Octax ms / step | Octorch ms / step | Octax M steps / s | Octorch M steps / s | speed-up |
+| ---: | ---: | ---: | ---: | ---: | ---: |
+| 256 | 3.84 | 2.40 | 0.067 | 0.107 | 1.6× |
+| 1 024 | 5.01 | 2.90 | 0.205 | 0.355 | 1.7× |
+| 4 096 | 11.07 | 4.48 | 0.370 | 0.917 | 2.5× |
+| 16 384 | 31.58 | 11.88 | 0.519 | 1.379 | 2.7× |
+| 65 536 | 114.69 | 44.22 | 0.571 | 1.482 | 2.6× |
+
+The price is compile time: XLA compiles the Octax step in ~2 s, Inductor needs ~10 s with a warm cache
+(~90 s cold) for the default frame granularity. Scripts and raw numbers are in `benchmarks/`.
+
 ## Training results
 
 PPO (`train.py`, 512 environments, 5M timesteps, 3 seeds, one A100 per game, compiled environment step;
@@ -177,9 +196,55 @@ Two independent checks guard the emulator:
    It also checks the batched engine against the standalone per-instruction handlers and runs the classic
    `test_opcode.ch8` ROM.
 2. **Cross-validation with Octax** – `tests/test_octax_crossval.py` (needs `uv sync --extra validate`) replays
-   every game for 150 steps in the original JAX Octax and in Octorch with identical actions and requires
+   every game in the original JAX Octax and in Octorch with identical actions and requires
    bit-identical observations, registers, rewards, terminations and scores. Octax is patched to use
    Octorch's xorshift32 stream for the `CXNN` instruction so that random games are comparable too.
+
+The table below is the result of replaying every Octax-loadable environment for **128 steps**
+(5 632 CHIP-8 instructions) with a random action sequence, in JAX Octax and in Octorch (batched, CUDA), and
+comparing after every step: the `(4, 64, 32)` observation, the 16 registers, PC and I, the PRNG state, the
+reward, the terminated / truncated flags and the score. ✅ means every one of the 128 steps was identical.
+(`cavern4a` / `cavern4b` are additionally supported by Octorch but cannot be loaded by Octax, so they are absent.)
+
+| env id | title | steps | observations | registers V | PC / I | PRNG | reward | terminated / truncated | score |
+| --- | --- | ---: | :-: | :-: | :-: | :-: | :-: | :-: | :-: |
+| `airplane` | Airplane | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `blinky` | Blinky | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `brix` | Brix | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cavern1` | Cavern | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cavern2` | Cavern | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cavern3` | Cavern | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cavern5` | Cavern | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `cavern6` | Cavern | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `deep` | Deep8 | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `filter` | Filter | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `flight_runner` | Flight Runner | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `missile` | Missile Command | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `pong` | Pong | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `rocket` | Rocket | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `shooting_stars` | Shooting Stars | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight1` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight10` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight2` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight3` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight4` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight5` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight6` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight7` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight8` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `space_flight9` | Space Flight | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `spacejam` | Spacejam! | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `squash` | Squash | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `submarine` | Submarine | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `tank` | Tank Battle | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `target_shooter1` | Target Shooter - LLM-Generated RL Environment | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `target_shooter2` | Target Shooter - LLM-Generated RL Environment | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `target_shooter3` | Target Shooter - LLM-Generated RL Environment | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `tetris` | Tetris | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `ufo` | UFO | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `vertical_brix` | Vertical Brix | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `wipe_off` | Wipe Off | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| `worm` | SuperWorm V4 | 128 | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 Octorch reproduces two Octax behaviours on purpose:
 

@@ -5,6 +5,7 @@ massively parallel reinforcement-learning environments.
 
 - [Installation](installation.md)
 - [Environments](environments/index.md) and the [game list](environments/games.md)
+- [Validation table](validation.md)
 - [FAQ](faq.md)
 - [Changelog](changelog.md)
 - Tutorials: [quick start](../tutorials/01_quickstart.md), [core emulator concepts](../tutorials/02_core_emulator_concepts.md),
